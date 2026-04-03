@@ -1,0 +1,8 @@
+name: email-triage-env
+description: A real-world email triage environment for classification, prioritization, and routing.
+
+entrypoint: env.environment:EmailEnv
+
+observation_model: env.models:Observation
+action_model: env.models:Action
+reward_model: env.models:Reward
