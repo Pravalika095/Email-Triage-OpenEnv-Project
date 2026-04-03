@@ -1,0 +1,21 @@
+[project]
+name = "email-triage-openenv"
+version = "0.1.0"
+description = "Email triage RL environment"
+authors = [{ name = "Pravalika" }]
+
+dependencies = [
+  "openenv-core",
+  "pydantic",
+  "fastapi",
+  "uvicorn",
+  "openai",
+  "huggingface_hub",
+  "python-dotenv"
+]
+
+[project.scripts]
+server = "server.app:main"
+
+[tool.openenv]
+entrypoint = "env.environment:EmailEnv"
