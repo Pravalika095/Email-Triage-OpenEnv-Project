@@ -17,8 +17,9 @@ class Observation(BaseModel):
 
 # Action (What agent does)
 class Action(BaseModel):
-    action_type: str   # classify / set_priority / route
-    value: str         # spam / important / high / engineering etc.
+    category: Optional[str] = None
+    priority: Optional[str] = None
+    department: Optional[str] = None
 
 
 # Reward (Feedback)

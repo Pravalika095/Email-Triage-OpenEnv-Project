@@ -6,9 +6,9 @@ class EmailEnv:
     def __init__(self):
         self.current_email = None
         self.steps = 0
-        self.max_steps = 3
+        self.max_steps = 1  # single-step decision (full action at once)
 
-        # Sample email dataset
+        # Expanded dataset (better realism)
         self.emails = [
             {
                 "email_id": "1",
@@ -39,9 +39,31 @@ class EmailEnv:
                     "priority": "high",
                     "department": "engineering"
                 }
+            },
+            {
+                "email_id": "4",
+                "subject": "Customer complaint urgent",
+                "body": "App not working properly",
+                "sender": "user@gmail.com",
+                "expected": {
+                    "category": "important",
+                    "priority": "high",
+                    "department": "support"
+                }
+            },
+            {
+                "email_id": "5",
+                "subject": "Weekly progress report",
+                "body": "Please review the report",
+                "sender": "lead@company.com",
+                "expected": {
+                    "category": "work",
+                    "priority": "medium"
+                }
             }
         ]
 
+    # 🔁 Reset environment
     def reset(self):
         self.steps = 0
         self.current_email = random.choice(self.emails)
@@ -50,48 +72,56 @@ class EmailEnv:
             email_id=self.current_email["email_id"],
             subject=self.current_email["subject"],
             body=self.current_email["body"],
-            sender=self.current_email["sender"]
+            sender=self.current_email["sender"],
+            category=None,
+            priority=None,
+            department=None
         )
 
+    # 📊 Current state
     def state(self):
-        return self.current_email
+        return Observation(
+            email_id=self.current_email["email_id"],
+            subject=self.current_email["subject"],
+            body=self.current_email["body"],
+            sender=self.current_email["sender"],
+            category=self.current_email.get("category"),
+            priority=self.current_email.get("priority"),
+            department=self.current_email.get("department")
+        )
 
+    # ⚙️ Step function
     def step(self, action: Action):
-        reward = 0.0
-        done = False
-
         expected = self.current_email["expected"]
+        reward = 0.0
 
-        # Reward logic
-        if action.action_type == "classify":
-            if action.value == expected.get("category"):
-                reward += 0.4
-            else:
-                reward -= 0.2
+        # 🎯 Reward calculation
+        if action.category == expected.get("category"):
+            reward += 0.4
 
-        elif action.action_type == "set_priority":
-            if action.value == expected.get("priority"):
-                reward += 0.3
-            else:
-                reward -= 0.2
+        if action.priority == expected.get("priority"):
+            reward += 0.3
 
-        elif action.action_type == "route":
-            if action.value == expected.get("department"):
-                reward += 0.3
-            else:
-                reward -= 0.2
+        if action.department == expected.get("department"):
+            reward += 0.3
+
+        # 📝 Update environment state
+        self.current_email["category"] = action.category
+        self.current_email["priority"] = action.priority
+        self.current_email["department"] = action.department
 
         self.steps += 1
-
-        if self.steps >= self.max_steps:
-            done = True
+        done = self.steps >= self.max_steps
 
         return (
             Observation(
                 email_id=self.current_email["email_id"],
                 subject=self.current_email["subject"],
                 body=self.current_email["body"],
-                sender=self.current_email["sender"]
+                sender=self.current_email["sender"],
+                category=action.category,
+                priority=action.priority,
+                department=action.department
             ),
             Reward(score=reward),
             done,

@@ -1,9 +1,13 @@
-def grade(prediction, expected):
-    score = 0
-    total = len(expected)
+def grade(pred, expected):
+    score = 0.0
 
-    for key in expected:
-        if key in prediction and prediction[key] == expected[key]:
-            score += 1
+    if pred.get("category") == expected.get("category"):
+        score += 0.4
 
-    return score / total if total > 0 else 0.0
+    if pred.get("priority") == expected.get("priority"):
+        score += 0.3
+
+    if pred.get("department") == expected.get("department"):
+        score += 0.3
+
+    return score
