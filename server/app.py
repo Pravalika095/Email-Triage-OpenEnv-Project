@@ -7,15 +7,27 @@ app = FastAPI()
 env = EmailEnv()
 
 
+# ✅ Root endpoint (fixes 404)
+@app.get("/")
+def home():
+    return {"message": "Email Triage OpenEnv is running"}
+
+
+# 🔁 Reset environment
 @app.get("/reset")
 def reset():
     obs = env.reset()
     return obs.dict()
 
 
+# ⚙️ Step execution (SAFE VERSION)
 @app.post("/step")
 def step(action: dict):
-    act = Action(**action)
+    try:
+        act = Action(**action)
+    except Exception as e:
+        return {"error": f"Invalid action format: {str(e)}"}
+
     obs, reward, done, info = env.step(act)
 
     return {
@@ -26,14 +38,15 @@ def step(action: dict):
     }
 
 
+# 📊 Get current state
 @app.get("/state")
 def state():
-    return env.state()
+    return env.state().dict()
 
 
 # ✅ REQUIRED MAIN FUNCTION
 def main():
-    uvicorn.run("server.app:app", host="0.0.0.0", port=8000)
+    uvicorn.run("server.app:app", host="0.0.0.0", port=7860)
 
 
 # ✅ REQUIRED ENTRY POINT

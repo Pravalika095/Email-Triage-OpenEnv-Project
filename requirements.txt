@@ -3,3 +3,6 @@ pydantic
 openai
 huggingface_hub
 python-dotenv
+fastapi
+uvicorn
+
