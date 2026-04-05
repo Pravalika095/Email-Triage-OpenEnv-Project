@@ -10,7 +10,16 @@ env = EmailEnv()
 # ✅ Root endpoint (fixes 404)
 @app.get("/")
 def home():
-    return {"message": "Email Triage OpenEnv is running"}
+    return {
+        "project": "Email Triage OpenEnv",
+        "status": "running",
+        "endpoints": {
+            "reset": "/reset",
+            "step": "/step",
+            "state": "/state"
+        },
+        "description": "RL environment for email classification, prioritization, and routing"
+    }
 
 
 # 🔁 Reset environment
