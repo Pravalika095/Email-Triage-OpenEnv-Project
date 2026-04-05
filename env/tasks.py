@@ -54,14 +54,14 @@ tasks = [
         }
     },
 
-    # 🔴 HARD TASKS
+    # 🔴 HARD TASKS (IMPROVED)
     {
         "id": "hard_1",
-        "description": "Full triage: classify, priority, route",
+        "description": "Ambiguous urgent infrastructure issue affecting users",
         "input": {
-            "subject": "URGENT: Server Down",
-            "body": "Production system failure",
-            "sender": "admin@company.com"
+            "subject": "URGENT: Server issue affecting payments",
+            "body": "Customers unable to complete transactions due to system instability",
+            "sender": "ops@company.com"
         },
         "expected": {
             "category": "important",
@@ -71,10 +71,10 @@ tasks = [
     },
     {
         "id": "hard_2",
-        "description": "Customer complaint requiring support handling",
+        "description": "Customer complaint with urgency and support handling required",
         "input": {
             "subject": "App not working - urgent help needed",
-            "body": "I am unable to login to my account",
+            "body": "I am unable to login and losing access to my data",
             "sender": "customer@gmail.com"
         },
         "expected": {
