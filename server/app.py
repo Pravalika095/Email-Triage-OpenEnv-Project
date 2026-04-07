@@ -23,14 +23,14 @@ def home():
 
 
 # 🔁 Reset environment
-@app.get("/reset")
+@app.api_route("/reset", methods=["GET", "POST"])
 def reset():
     obs = env.reset()
     return obs.dict()
 
 
 # ⚙️ Step execution (SAFE VERSION)
-@app.post("/step")
+@app.api_route("/step", methods=["POST"])
 def step(action: dict):
     try:
         act = Action(**action)
