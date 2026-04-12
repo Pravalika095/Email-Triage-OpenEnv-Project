@@ -13,7 +13,7 @@ def grade(prediction, expected):
 
     final_score = 0.3 + (base_score * 0.4)
 
-    # strictly inside (0,1)
+    # ensure strictly inside (0,1)
     if final_score >= 1.0:
         final_score = 0.99
     if final_score <= 0.0:

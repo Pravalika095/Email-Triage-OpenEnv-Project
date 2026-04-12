@@ -1,4 +1,5 @@
 from env.models import Observation, Action, Reward
+from env.grader import grade
 import random
 
 
@@ -6,9 +7,8 @@ class EmailEnv:
     def __init__(self):
         self.current_email = None
         self.steps = 0
-        self.max_steps = 1  # single-step decision
+        self.max_steps = 1  # single-step episode
 
-        # 🔥 Expanded realistic dataset (10 emails)
         self.emails = [
             {
                 "email_id": "1",
@@ -98,7 +98,6 @@ class EmailEnv:
             }
         ]
 
-    # 🔁 Reset environment
     def reset(self):
         self.steps = 0
         self.current_email = random.choice(self.emails)
@@ -113,7 +112,6 @@ class EmailEnv:
             department=None
         )
 
-    # 📊 Current state
     def state(self):
         return Observation(
             email_id=self.current_email["email_id"],
@@ -125,32 +123,25 @@ class EmailEnv:
             department=self.current_email.get("department")
         )
 
-    # ⚙️ Step function
     def step(self, action: Action):
         expected = self.current_email["expected"]
-        reward = 0.0
 
-        # 🎯 Reward calculation (strong + meaningful)
-        if action.category == expected.get("category"):
-            reward += 0.5
+        prediction = {
+            "category": action.category,
+            "priority": action.priority,
+            "department": action.department
+        }
 
-        if action.priority == expected.get("priority"):
-            reward += 0.25
+        # ✅ CRITICAL: use grader (not manual reward)
+        score = grade(prediction, expected)
 
-        if action.department == expected.get("department"):
-            reward += 0.25
-
-        # ❌ Slight penalty for totally wrong prediction
-        if reward == 0:
-            reward = -0.1
-
-        # 📝 Update state
+        # update state
         self.current_email["category"] = action.category
         self.current_email["priority"] = action.priority
         self.current_email["department"] = action.department
 
         self.steps += 1
-        done = self.steps >= self.max_steps
+        done = True  # single-step
 
         return (
             Observation(
@@ -162,8 +153,7 @@ class EmailEnv:
                 priority=action.priority,
                 department=action.department
             ),
-            Reward(score=reward),
+            Reward(score=score),
             done,
             {"steps": self.steps}
         )
-    
