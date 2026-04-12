@@ -1,99 +1,65 @@
 import os
+import json
 from openai import OpenAI
 from env.tasks import tasks
 from env.grader import grade
 
-# Optional API usage
-use_api = os.getenv("OPENAI_API_KEY") is not None
+# ✅ MUST use hackathon-provided variables
+client = OpenAI(
+    api_key=os.environ["API_KEY"],
+    base_url=os.environ["API_BASE_URL"]
+)
 
-if use_api:
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+MODEL = os.environ.get("MODEL_NAME", "gpt-4o-mini")
 
+print("[START]")
 
-# 🤖 Improved rule-based agent
-def simple_agent(task):
-    subject = task["input"]["subject"].lower()
-    body = task["input"]["body"].lower()
+results = []
 
-    prediction = {
-        "category": None,
-        "priority": None,
-        "department": None
-    }
+for task in tasks:
+    print(f"[STEP] Running task: {task['id']}")
 
-    # 🟢 Spam detection
-    if "free" in subject or "win" in subject or "lottery" in subject:
-        prediction["category"] = "spam"
+    prompt = f"""
+You are an email triage assistant.
 
-    # 🟡 Work emails
-    elif "meeting" in subject or "report" in subject or "progress" in subject:
-        prediction["category"] = "work"
-        prediction["priority"] = "medium"
+Return ONLY a valid JSON object with keys:
+- category
+- priority (if needed)
+- department (if needed)
 
-    # 🔴 Important / urgent
-    elif (
-        "urgent" in subject
-        or "server" in subject
-        or "down" in subject
-        or "complaint" in subject
-        or "not working" in body
-    ):
-        prediction["category"] = "important"
-        prediction["priority"] = "high"
+Email:
+Subject: {task['input']['subject']}
+Body: {task['input']['body']}
+Sender: {task['input']['sender']}
+"""
 
-        # routing logic
-        if "server" in subject or "system" in body:
-            prediction["department"] = "engineering"
-        else:
-            prediction["department"] = "support"
-
-    return prediction
-
-
-# 🚀 MAIN EXECUTION
-if __name__ == "__main__":
-
-    TASK_NAME = "email_triage"
-    MODEL_NAME = os.getenv("MODEL_NAME", "rule_based")
-
-    print(f"[START] task={TASK_NAME} env=openenv model={MODEL_NAME}")
-
-    rewards = []
-    steps = 0
-
-    for i, task in enumerate(tasks, 1):
-
-        # 🔁 Get prediction
-        if use_api:
-            try:
-                response = client.chat.completions.create(
-                    model=os.getenv("MODEL_NAME"),
-                    messages=[{"role": "user", "content": str(task)}]
-                )
-                prediction = eval(response.choices[0].message.content)
-            except:
-                prediction = simple_agent(task)
-        else:
-            prediction = simple_agent(task)
-
-        # 🎯 Grade prediction
-        score = grade(prediction, task["expected"])
-        reward = float(score)
-        done = i == len(tasks)
-
-        rewards.append(reward)
-        steps = i
-
-        # 🧾 Log action (important for evaluation)
-        print(
-            f"[STEP] step={i} action={prediction} reward={reward:.2f} done={str(done).lower()} error=null"
+    try:
+        # ✅ REQUIRED API CALL (proxy)
+        response = client.chat.completions.create(
+            model=MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0
         )
 
-    # ✅ Final success condition
-    success = (sum(rewards) / len(rewards)) >= 0.7
+        output_text = response.choices[0].message.content
 
-    rewards_str = ",".join(f"{r:.2f}" for r in rewards)
+        # ✅ SAFE JSON PARSING
+        try:
+            prediction = json.loads(output_text)
+        except:
+            prediction = {}
 
-    print(
-        f"[END] success={str(success).lower()} steps={steps} rewards={rewards_str}"
-    )
+    except Exception as e:
+        print(f"[STEP] API error: {e}")
+        prediction = {}
+
+    # ✅ grading
+    score = grade(prediction, task["expected"])
+    results.append(score)
+
+    print(f"[STEP] Score: {score}")
+
+# ✅ final score
+final_score = sum(results) / len(results)
+
+print(f"[END] Final Score: {final_score}")
