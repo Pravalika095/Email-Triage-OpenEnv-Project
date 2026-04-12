@@ -3,21 +3,20 @@ def grade(prediction, expected):
     total = len(expected)
 
     for key in expected:
-        if key in prediction:
-            if prediction[key] == expected[key]:
-                score += 1
-            else:
-                score += 0.0  # ❗ no partial credit
+        if key in prediction and prediction[key] == expected[key]:
+            score += 1
 
     if total == 0:
         return 0.5
 
-    final_score = score / total
+    base_score = score / total
 
-    # ✅ clamp strictly inside (0,1)
+    final_score = 0.3 + (base_score * 0.4)
+
+    # strictly inside (0,1)
     if final_score >= 1.0:
-        final_score = 0.85
-    elif final_score <= 0.0:
-        final_score = 0.15
+        final_score = 0.99
+    if final_score <= 0.0:
+        final_score = 0.01
 
     return final_score
